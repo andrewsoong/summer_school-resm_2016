@@ -61,8 +61,18 @@ The [ICTP](http://www.ictp.it/research/esp.aspx)'s RegCM (**Reg**ional **C**Lima
 > make install
 ```
 
-The 
+### Use Case
 
+The atmospheric model use case that will be used in the hands-on sessions includes,
+
+* A parent domain that covers entire Mediterranean Basin (MED50) with 50 km horizontal resolution.
+* A nested domain that covers entire Black Sea and Turkey with 10 km horizontal resolution. In the cupling session (day 3), we will couple Black Sea ocean model with inner-most model domain (TR10).
+* The parent domain will be forced by ERA-Interim dataset that can be retrieved from [here](http://www.ecmwf.int/en/research/climate-reanalysis/era-interim).
+* Jan. 2010 is selected for the test simulations
+
+![Domain map with high-resolution nest](https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/images/Fig_01_domain.png)
+
+### Creating Initial and Boundary Conditions (ICBC)
 
 
 
