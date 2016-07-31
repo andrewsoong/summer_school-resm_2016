@@ -18,7 +18,7 @@ The provided accounts will be available until **10 Sept. 2016** and they are lim
 ## Installation of Required Libraries (not required, optional)
 This section includes detailed information to prepare required software environment that will be used in the hands-on section of the summer school. Please note that:
 
-* The commands shown in the rest of the document is tested on **Anadolu@UHeM** cluster and might slightly change in other HPC system or server. 
+* The commands shown in the rest of the document is tested on **Anadolu@UHeM** cluster using **Intel C/C++/Fortran Compiler (14.0.1)** and **MPI (4.0 Update 3)** and might slightly change in other HPC system or server. 
 
 * The required third-party libraries and tools to install and run the models (i.e. RegCM, ROMS and RegESM) are already installed to the **/RS/progs/workshop** folder.
 
@@ -34,7 +34,9 @@ It is also possible to add these commands to **~/.bashrc** (for bash shell users
 The **install.sh** script can be used for the installation of required tools (i.e. [zlib](http://www.zlib.net), [HDF5](https://www.hdfgroup.org/HDF5/), [netCDF C/C++ and Fortran](http://www.unidata.ucar.edu/software/netcdf/), [xerces-c](http://xerces.apache.org/#xerces-c) and [ESMF](https://www.earthsystemcog.org/projects/esmf/) libraries). The script can be executed using following command (the command line argument given after shell script is the installation directory i.e. **/opt/progs**).
 
 ```
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/install.sh
 > ./install.sh `pwd`
+
 or in case of explicitly defined installation directory 
 > ./install.sh /opt/progs
 ```
@@ -57,24 +59,73 @@ The [ICTP](http://www.ictp.it/research/esp.aspx)'s RegCM (**Reg**ional **C**Lima
 > tar -zxvf RegCM-4.5.0.tar.gz
 > cd RegCM-4.5.0
 > ./configure --prefix=`pwd` CC=${CC} FC=${FC} MPIFC=mpiifort
-> make
 > make install
+> cd ../..
+> ln -s src/RegCM-4.5.0/bin .
+```
+
+The installation of the model might take time depending on the used system and the selected compiler. Due to the limited time of the hands-on section, the RegCM installation under **/RS/progs/workshop/hands-on/day1/src/RegCM-4.5.0** directory can be used by linking binary directory,
+
+```
+> cd /RS/users/[workshop user name]/workshop
+> mkdir day1
+> ln -s /RS/progs/workshop/hands-on/day1/src/RegCM-4.5.0/bin .
 ```
 
 ### Use Case
 
-The atmospheric model use case that will be used in the hands-on sessions includes,
+The atmospheric model use case that will be used in the hands-on session includes,
 
 * A parent domain that covers entire Mediterranean Basin (MED50) with 50 km horizontal resolution.
-* A nested domain that covers entire Black Sea and Turkey with 10 km horizontal resolution. In the cupling session (day 3), we will couple Black Sea ocean model with inner-most model domain (TR10).
-* The parent domain will be forced by ERA-Interim dataset that can be retrieved from [here](http://www.ecmwf.int/en/research/climate-reanalysis/era-interim).
-* Jan. 2010 is selected for the test simulations
+* A nested domain that covers entire Black Sea and Turkey with 10 km horizontal resolution. In the model coupling session (day 3), we will couple Black Sea ocean model (ROMS) with inner-most atmosphere model domain (TR10).
+* The parent domain will be forced by ERA-Interim dataset that can be retrieved from [here](http://www.ecmwf.int/en/research/climate-reanalysis/era-interim) and nested domain ICBC will be created using output of parent model domain (MED50). This is called as "one-way nesting".
+* The test simulation is planed as one month long (Jan. 2010).
 
 ![Domain map with high-resolution nest](https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/images/Fig_01_domain.png)
 
-### Creating Initial and Boundary Conditions (ICBC)
+### Running Parent Domain (MED50)
+
+The initial and boundary conditions for RegCM model can be retrieved from [here](http://clima-dods.ictp.it/regcm4/). In this tutorial, ERA-Interim ([EIN75](http://clima-dods.ictp.it/regcm4/EIN75)) dataset will be used along with weekly SST ([OI-SST](http://clima-dods.ictp.it/regcm4/SST)) dataset (used as prescribed SST data in standalone model simulation) to force the model. For year 2010, the data is placed under **/RS/progs/workshop/data/RCMDATA**. The following commands is used to create input files for RegCM,
+
+```
+> cd /RS/users/[workshop user name]/workshop/day1
+> mkdir output
+> wget
+ 
+> mkdir input 
+> bin/terrain regcm.in_MED50km
+> bin/sst regcm.in_MED50km 
+> bin/icbc regcm.in_MED50km
+
+or
+
+> ln -s 
+```
+
+Anadolu@UHeM cluster uses LSF as a job schedular and it is required to create job submission script to submit RegCM simulation to cluster. So, following script (named as **regcm.lsf**) can be used for this purpose,
+
+```
+#!/bin/bash
+#BSUB -P workshop
+#BSUB -J regcm 
+#BSUB -q workshop 
+#BSUB -m anadolu_quad 
+#BSUB -o %J.out
+#BSUB -e %J.err
+#BSUB -a intelmpi4
+#BSUB -n 16 
+
+mpirun.lsf bin/regcmMPI regcm.in_MED50km >& regcmout.txt 
+```
+
+### Running Nested Domain (TR10)
+
+The initial and boundary conditions of nested model will be provided by the output of paramen model domain (MED50).
 
 
+## Day2: Installation and Usage of ROMS
 
 
+## Day3: Model Coupling with Regional Earth System Model (RegESM) modeling system
 
+The open source RegESM modeling system is developed by ITU. The source is maintained by GitHub to allow version controlling and issue traking. The source code can be reachable from [here](https://github.com/uturuncoglu/RegESM). 
