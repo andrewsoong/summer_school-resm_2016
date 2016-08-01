@@ -138,20 +138,39 @@ After creating job submission script (i.e. **regcm.lsf**), it could be submmited
 > bsub < regcm.lsf
 ```
 
-The simulation can be checked by looking **regcmout.txt** file using *cat* or *tail* basic Linux commands. The output files will be placed under *output/* directory.
+The simulation can be checked by looking **regcmout.txt** file using *cat* or *tail* basic Linux commands. The output files will be placed under *output/* directory. The following LSF commands might help to monitor or kill the jobs.
+
+```
+> bjobs - shows the running jobs
+> bjobs -u all - shows all jobs in the system (including other users)
+> bkill [JOB ID] - kill the job
+```
 
 ### Running Nested Domain (TR10)
 
-After running parent domain (MED50) simulation and having output files, the initial and boundary conditions of nested model can be created.
+After running parent domain (MED50) simulation and having output files, the initial and boundary conditions of nested model can be created. The first step is to create the input file directory (MED50 output files and SST data) that will be used to create input file for TR10 simulation.
 
 ```
 > cd /RS/users/[workshop user name]/workshop/day1
 > mkdir data
 > cd data
-> wget 
-```
- 
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/link.sh
 
+edit idir parameter and change the output directory before running following commands! 
+
+> ./link.sh
+> ln -s /RS/progs/workshop/data/RCMDATA/SST .
+```
+
+Then, the regular procedure to create terrain, sst and icbc files can be used.
+
+```
+> bin/terrain regcm.in_TR10km 
+> bin/sst regcm.in_TR10km
+> bin/icbc regcm.in_TR10km
+```
+
+Edit job submission script (**regcm.lsf**) and place **regcm.in_MED50km** with **regcm.in_TR10km**. So, the new run will use configuration of TR10 model domain. Then, the LSF script can be submitted as usual.
 
 ## Day2: Installation and Usage of ROMS
 
