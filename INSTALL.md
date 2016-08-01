@@ -78,31 +78,43 @@ The atmospheric model use case that will be used in the hands-on session include
 
 * A parent domain that covers entire Mediterranean Basin (MED50) with 50 km horizontal resolution.
 * A nested domain that covers entire Black Sea and Turkey with 10 km horizontal resolution. In the model coupling session (day 3), we will couple Black Sea ocean model (ROMS) with inner-most atmosphere model domain (TR10).
-* The parent domain will be forced by ERA-Interim dataset that can be retrieved from [here](http://www.ecmwf.int/en/research/climate-reanalysis/era-interim) and nested domain ICBC will be created using output of parent model domain (MED50). This is called as "one-way nesting".
+* The parent domain will be forced by [ERA-Interim](http://www.ecmwf.int/en/research/climate-reanalysis/era-interim) dataset and nested domain ICBC will be created using output of parent model domain (MED50). This procedure is called as "one-way nesting".
 * The test simulation is planed as one month long (Jan. 2010).
 
 ![Domain map with high-resolution nest](https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/images/Fig_01_domain.png)
 
 ### Running Parent Domain (MED50)
 
-The initial and boundary conditions for RegCM model can be retrieved from [here](http://clima-dods.ictp.it/regcm4/). In this tutorial, ERA-Interim ([EIN75](http://clima-dods.ictp.it/regcm4/EIN75)) dataset will be used along with weekly SST ([OI-SST](http://clima-dods.ictp.it/regcm4/SST)) dataset (used as prescribed SST data in standalone model simulation) to force the model. For year 2010, the data is placed under **/RS/progs/workshop/data/RCMDATA**. The following commands is used to create input files for RegCM,
+Before running the model, we need to create ICBC files,
+
+* The whole set of suppoted initial and boundary conditions for RegCM model can be found in [here](http://clima-dods.ictp.it/regcm4/). 
+* In this session, the ERA-Interim ([EIN75](http://clima-dods.ictp.it/regcm4/EIN75)) dataset will be used along with weekly SST ([OI-SST](http://clima-dods.ictp.it/regcm4/SST)) dataset (used as prescribed SST data in standalone model simulation)
+* For year 2010, the data already placed under **/RS/progs/workshop/data/RCMDATA**. 
+
+To get RegCM configuration file for MED50 simulation,
 
 ```
 > cd /RS/users/[workshop user name]/workshop/day1
-> mkdir output
-> wget
- 
-> mkdir input 
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/regcm.in_MED50km
+```
+
+Then, edit **regcm.in_MED50km** file and modify **dirter**, **dirglob**, **dirout** paths according to your user directories and run following commands to create input files for RegCM simulation, 
+
+``` 
+> mkdir input output
 > bin/terrain regcm.in_MED50km
 > bin/sst regcm.in_MED50km 
 > bin/icbc regcm.in_MED50km
-
-or
-
-> ln -s 
 ```
 
-Anadolu@UHeM cluster uses LSF as a job schedular and it is required to create job submission script to submit RegCM simulation to cluster. So, following script (named as **regcm.lsf**) can be used for this purpose,
+This will create a bunch of files under *input/* diectory. The generation of ICBC files could take time. So, the folder given in following command contains the required input files and can be linked to the user directory.
+
+```
+> mkdir output
+> ln -s /RS/progs/workshop/data/DAY1/input .
+```
+
+After having input files, now we are ready to run the model. **Anadolu@UHeM** cluster uses LSF as a job schedular. To submit the actual RegCM simulation to the cluster, we need to create job submission script. So, following script (you can call it as **regcm.lsf**) can be used for this purpose,
 
 ```
 #!/bin/bash
@@ -118,9 +130,27 @@ Anadolu@UHeM cluster uses LSF as a job schedular and it is required to create jo
 mpirun.lsf bin/regcmMPI regcm.in_MED50km >& regcmout.txt 
 ```
 
+In this case, **-n** option basically controls the number of processor that will be used for the simulation. **-P** is the name of the project that will be used for the accounting purpose.
+
+After creating job submission script (i.e. **regcm.lsf**), it could be submmited to the system using following command,
+
+```
+> bsub < regcm.lsf
+```
+
+The simulation can be checked by looking **regcmout.txt** file using *cat* or *tail* basic Linux commands. The output files will be placed under *output/* directory.
+
 ### Running Nested Domain (TR10)
 
-The initial and boundary conditions of nested model will be provided by the output of paramen model domain (MED50).
+After running parent domain (MED50) simulation and having output files, the initial and boundary conditions of nested model can be created.
+
+```
+> cd /RS/users/[workshop user name]/workshop/day1
+> mkdir data
+> cd data
+> wget 
+```
+ 
 
 
 ## Day2: Installation and Usage of ROMS
