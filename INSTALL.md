@@ -52,7 +52,7 @@ Then source the **env_progs** file to use installed libraries and tools using fo
 The [ICTP](http://www.ictp.it/research/esp.aspx)'s RegCM (**Reg**ional **C**Limate **M**odel) development is managed by SVN repository that can be found in [here](https://gforge.ictp.it/gf/project/regcm/scmsvn/?action=AccessInfo). To retrieve and install latest tagged version of the source code, please issue following commands,
 
 ```
-> cd /RS/users/[workshop user name]/workshop
+> cd /RS/users/$USER/workshop
 > mkdir -p day1/src
 > cd day1/src
 > wget https://gforge.ictp.it/gf/download/frsrelease/252/1580/RegCM-4.5.0.tar.gz
@@ -67,7 +67,7 @@ The [ICTP](http://www.ictp.it/research/esp.aspx)'s RegCM (**Reg**ional **C**Lima
 The installation of the model might take time depending on the used system and the selected compiler. Due to the limited time of the hands-on section, the RegCM installation under **/RS/progs/workshop/hands-on/day1/src/RegCM-4.5.0** directory can be used by linking binary directory,
 
 ```
-> cd /RS/users/[workshop user name]/workshop
+> cd /RS/users/$USER/workshop
 > mkdir day1
 > ln -s /RS/progs/workshop/hands-on/day1/src/RegCM-4.5.0/bin .
 ```
@@ -94,7 +94,7 @@ Before running the model, we need to create ICBC files,
 To get RegCM configuration file for MED50 simulation,
 
 ```
-> cd /RS/users/[workshop user name]/workshop/day1
+> cd /RS/users/$USER/workshop/day1
 > wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/regcm.in_MED50km
 ```
 
@@ -151,7 +151,7 @@ The simulation can be checked by looking **regcmout.txt** file using *cat* or *t
 After running parent domain (MED50) simulation and having output files, the initial and boundary conditions of nested model can be created. The first step is to create the input file directory (MED50 output files and SST data) that will be used to create input file for TR10 simulation.
 
 ```
-> cd /RS/users/[workshop user name]/workshop/day1
+> cd /RS/users/$USER/workshop/day1
 > mkdir data
 > cd data
 > wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/link.sh
@@ -160,9 +160,10 @@ edit idir parameter and change the output directory before running following com
 
 > ./link.sh
 > ln -s /RS/progs/workshop/data/RCMDATA/SST .
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/regcm.in_TR10km
 ```
 
-Then, the regular procedure to create terrain, sst and icbc files can be used.
+Then, edit **regcm.in_TR10km** file and modify **dirter**, **dirglob**, **dirout** paths according to your user directories and run following commands to create input files for RegCM simulation,
 
 ```
 > bin/terrain regcm.in_TR10km 
@@ -170,9 +171,31 @@ Then, the regular procedure to create terrain, sst and icbc files can be used.
 > bin/icbc regcm.in_TR10km
 ```
 
-Edit job submission script (**regcm.lsf**) and place **regcm.in_MED50km** with **regcm.in_TR10km**. So, the new run will use configuration of TR10 model domain. Then, the LSF script can be submitted as usual.
+Edit job submission script (**regcm.lsf**) used to run parent model domain and place **regcm.in_MED50km** with **regcm.in_TR10km**. So, the new run will use configuration of nested model domain (TR10). You may also increase the number of processor from 16 to 32. Then, the LSF script can be submitted as usual.
+
+### Visualization and Analysis of Model Results
+
+The output of the model is in NetCDF format and can be read by common data analysis and visualization tools such as [NCL](http://www.ncl.ucar.edu), [Ferret](http://ferret.pmel.noaa.gov/Ferret/), [Grads](http://cola.gmu.edu/grads/), [R](https://www.r-project.org) or Python programming language with [Matplotlib](http://matplotlib.org) toolbox. 
+
+The results of simulations (MED50 and TR10) can be found in **/RS/progs/workshop/data/DAY1/output**.
+
 
 ## Day2: Installation and Usage of ROMS
+
+The following commands can be used to download and install ROMS. You must register in [here](https://www.myroms.org/index.php?page=RomsCode) to download the model (**original standalone version, not support with coupling!**).
+
+```
+if you already registered and got user name and password
+> svn checkout -r 809 --username [ROMS USER NAME] https://www.myroms.org/svn/src/trunk roms-r809
+
+if not, you could download the source code from GitHub
+> wget  
+
+
+
+```
+
+
 
 
 ## Day3: Model Coupling with Regional Earth System Model (RegESM) modeling system
