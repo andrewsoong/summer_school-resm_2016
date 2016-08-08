@@ -182,21 +182,255 @@ The results of simulations (MED50 and TR10) can be found in **/RS/progs/workshop
 
 ## Day2: Installation and Usage of ROMS
 
-The following commands can be used to download and install ROMS. You must register in [here](https://www.myroms.org/index.php?page=RomsCode) to download the model (**original standalone version, not support with coupling!**).
+The installation and usage of ROMS oceean modeling system include set of steps;
+
+1. Preparing model using system/architecture specific definitions (i.e. compiler, MPI and third-party libraries)
+2. Modifiying source code of the model for specific application (optional!)
+3. Creating build script and model configuration file (*.h) to install model
+4. Creating ocean model grid, initial and boundary conditions (not covered in this school) and atmospheric forcing (partly covered) in NetCDF format.
+5. Creating model parameter file (*.in) to run the model 
+
+The simplified version of the Black Sea model will be used during the summer school,
+
+![Bathymetry map](https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/images/Fig_02_bathymetry.png)
+
+The following commands can be used to download ROMS modeling system (**the original version of the model does not support coupling through the RegESM driver! See section for day three for more information**) but first, you must register in [here](https://www.myroms.org/index.php?page=RomsCode) to get access to download the model using [SVN](https://subversion.apache.org) command.
 
 ```
-if you already registered and got user name and password
+> mkdir /RS/users/$USER/workshop/day2
+> cd /RS/users/$USER/workshop/day2
+> mkdir src
+> cd src
+
+if you already registered and have user name and password
 > svn checkout -r 809 --username [ROMS USER NAME] https://www.myroms.org/svn/src/trunk roms-r809
 
 if not, you could download the source code from GitHub
-> wget  
-
-
-
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/blob/master/day2/src/roms-r809.tar.gz
+> tar -zxvf roms-r809.tar.gz 
 ```
 
+In case of using original version of the ROMS ocean model (retrieved from subversion), you need to do minor modification in the source code (**roms-r809/ROMS/Nonlinear/bulk_flux.F**) to allow correct flux calculation (via Bulk Flux module) from *RegCM* model output. In this case, new configuration parameter  (CPP preprocessor flag, **SPECIFIC_HUMIDITY**) can be added as follows,
 
+```
+...
+...
+!
+!-----------------------------------------------------------------------
+!  Compute net longwave radiation (W/m2), LRad.
+!-----------------------------------------------------------------------
 
+# if defined LONGWAVE
+!
+!  Use Berliand (1952) formula to calculate net longwave radiation.
+!  The equation for saturation vapor pressure is from Gill (Atmosphere-
+!  Ocean Dynamics, pp 606). Here the coefficient in the cloud term
+!  is assumed constant, but it is a function of latitude varying from
+!  1.0 at poles to 0.5 at the Equator).
+!
+#  ifdef SPECIFIC_HUMIDITY
+!  specific humidity in units of kg/kg
+          vap_p=PairM*RH/(1.0_r8+0.378_r8*RH)             !WPB
+#  else
+      IF(RH.lt.2.0_r8) THEN                               !WPB
+          cff=(0.7859_r8+0.03477_r8*TairC(i))/                          &
+     &        (1.0_r8+0.00412_r8*TairC(i))
+          e_sat=10.0_r8**cff   ! saturation vapor pressure (hPa or mbar)
+          vap_p=e_sat*RH       ! water vapor pressure (hPa or mbar)
+      ELSE                                                !WPB
+          vap_p=0.001_r8*PairM*RH/(1.0_r8+0.000378_r8*RH) !WPB
+      ENDIF                                               !WPB
+#  endif
+...
+...
+!
+!  Compute specific humidity, Q (kg/kg).
+!
+#ifdef SPECIFIC_HUMIDITY
+! Incoming humidity is specific humidity in (kg/kg)
+          Q(i)=RH
+#else
+          IF (RH.lt.2.0_r8) THEN                       !RH fraction
+            cff=cff*RH                                 !Vapor pres (mb)
+            Q(i)=0.62197_r8*(cff/(PairM-0.378_r8*cff)) !Spec hum (kg/kg)
+          ELSE          !RH input was actually specific humidity in g/kg
+            Q(i)=RH/1000.0_r8                          !Spec Hum (kg/kg)
+          END IF
+#endif
+...
+...
+```
+
+**Also, not that this modification is already placed in the ROMS ocean model retrieved from GitHub using wget command and you don't need to do again!!!**
+
+To install the model, user also need to edit an arcitecture specific file (found under **roms-r809/Compilers/**) according to used compiler, MPI library and NetCDF installation path. In our case, we will edit **Linux-ifort.mk** becasue we are using Intel Compiler and MPI. 
+
+The default definition of NetCDF library in **Linux-ifort.mk**
+
+```
+...
+ifdef USE_NETCDF4
+        NC_CONFIG ?= nc-config
+    NETCDF_INCDIR ?= $(shell $(NC_CONFIG) --prefix)/include
+             LIBS := $(shell $(NC_CONFIG) --flibs)
+else
+    NETCDF_INCDIR ?= /usr/local/include
+    NETCDF_LIBDIR ?= /usr/local/lib
+             LIBS := -L$(NETCDF_LIBDIR) -lnetcdf
+endif
+...
+ifdef USE_MPI
+         CPPFLAGS += -DMPI
+ ifdef USE_MPIF90
+               FC := mpif90
+ else
+             LIBS += -lfmpi-pgi -lmpi-pgi
+ endif
+endif
+...
+```
+
+must be modified as follows for **Adadolu@UHeM** cluster (be aware about empty spaces at the end of the directory definitions!),
+
+```
+...
+ifdef USE_NETCDF4
+        NC_CONFIG ?= nc-config
+    NETCDF_INCDIR ?= $(shell $(NC_CONFIG) --prefix)/include
+             LIBS := $(shell $(NC_CONFIG) --flibs)
+else
+    NETCDF_INCDIR ?= /RS/progs/workshop/netcdf-4.4.0/include
+    NETCDF_LIBDIR ?= /RS/progs/workshop/netcdf-4.4.0/lib
+             LIBS := -L$(NETCDF_LIBDIR) -lnetcdf -lnetcdff
+endif
+...
+ifdef USE_MPI
+         CPPFLAGS += -DMPI
+ ifdef USE_MPIF90
+               FC := mpiifort
+ else
+             LIBS += -lfmpi-pgi -lmpi-pgi
+ endif
+endif
+...
+```
+
+Then, copy build script and edit *ROMS_APPLICATION*, *MY_ROOT_DIR*, *MY_ROMS_SRC* and *which_MPI* definitions as it indicated,
+
+```
+> cd /RS/users/$USER/workshop/day2/src
+> cp roms-r809/ROMS/Bin/build.sh .
+> vi build.sh
+
+...
+...
+setenv ROMS_APPLICATION      BSEA
+setenv MY_ROOT_DIR           /RS/projects/workshop/$USER/day2/src
+setenv MY_ROMS_SRC           ${MY_ROOT_DIR}/roms-r809
+...
+...
+setenv which_MPI             intelmpi
+...
+...
+```
+
+Then, the installation script (**build.sh**) can be run along with the model configuration file (**bsea.h**),  
+
+```
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/bsea.h
+> ./build.sh
+```
+
+This will create an executable (**oceanM**) in the same directory. If you plaining to run the model in debug or serial mode then the name of the executable changes as **oceanG** and **oceanS**.
+
+In general, the ROMS ocean model requires a set of input files such as grid definition, initial and boundary conditions and atmospheric focing to run. In this tutorial, we will use previously created files for grid and initial conditions but atmospheric forcing will be generated by using output of RegCM simulation that is performed in last day (day1). To create atmospheric forcing for the standalone ocean model simulation and to retrive required files, the following commands can be used,
+
+```
+> cd /RS/users/$USER/workshop/day2
+> mkdir input
+> cd input
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/input.tar.gz
+> tar -zxvf input.tar.gz
+
+To create atmospheric forcing, you must edit roms_forc_bulk_ex.ncl and point out surface output of one month RegCM simulation. Then, you can run NCL script to create forcing file.
+
+> ncl roms_forc_bulk_ex.ncl
+```
+
+After issuing previous commands, the input directory must have a file called as BSEA_forcing_20100102-20100131.nc. Also note that [NCL](http://www.ncl.ucar.edu) visualization and data analysis tool is already installed under **/RS/progs/workshop** and will be available to all the users after sourcing **env_progs** file.
+
+The last missing file to run the model is the model parameter file (**bsea.in**). This file includes set of information about the application such as grid sizes (*Lm*, *Mm* and *N*), number of tiles in I and J direction (domain decomposition parameters, *NtileI* and *NtileJ*), model time steps and simulation lenght (*NTIMES*, *DT*, *NDTFAST*), output and restart file interval (*NRREC*, *LcycleRST*, *NRST*, *LDEFOUT*, *NHIS* and *NAVG*), diffusion and viscosity parameters (*TNU2*, *TNU4*, *VISC2* and *VISC4*), [Jerlow Water Type](https://www.myroms.org/projects/src/ticket/609) (*WTYPE*), vertical grid parameters (must be consistent with grid file, *Vtransform*, *Vstretching*, *THETA_S*, *THETA_B* and *TCLINE*), definition related with grid, initial condition and forcing files (*GRDNAME*, *ININAME* and *FRCNAME*).
+
+To run the model, use following steps and
+
+```
+> cd /RS/users/$USER/workshop/day2
+> ln -s src/oceanM .
+> mkdir output
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/bsea.in
+> cp src/roms-r809/ROMS/External/varinfo.dat .
+```
+
+edit **varinfo.dat**, which is used to define unit conversions (i.e. *scale_factor* and *add_offset*). The original definitions are
+
+```
+'Pair'                                             ! Input
+  'surface air pressure'
+  'millibar'                                       ! [millibar]
+  'Pair, scalar, series'
+  'pair_time'
+  'idPair'
+  'r2dvar'
+  1.0d0
+...
+'Qair'                                             ! Input
+  'surface air relative humidity'                  !  relative    or  specific
+  'percentage'                                     ! [percentage  or  g/kg    ]
+  'Qair, scalar, series'
+  'qair_time'
+  'idQair'
+  'r2dvar'                                         ! relative        specific
+  0.01d0  
+```
+
+and the modified definitions are
+
+```
+'Pair'                                             ! Input
+  'surface air pressure'
+  'millibar'                                       ! [millibar]
+  'Pair, scalar, series'
+  'pair_time'
+  'idPair'
+  'r2dvar'
+  0.01d0
+...
+'Qair'                                             ! Input
+  'surface air relative humidity'                  !  relative    or  specific
+  'percentage'                                     ! [percentage  or  g/kg    ]
+  'Qair, scalar, series'
+  'qair_time'
+  'idQair'
+  'r2dvar'                                         ! relative        specific
+  1.0d0  
+```
+edit **bsea.in** and modify parameters if it is necessary. Then, the the model can be submitted to LSF job scedular using following job submission script,
+
+```
+#!/bin/bash
+#BSUB -P workshop
+#BSUB -J roms 
+#BSUB -q workshop 
+#BSUB -m anadolu_dual 
+#BSUB -o %J.out
+#BSUB -e %J.err
+#BSUB -a intelmpi4
+#BSUB -n 32
+
+mpirun.lsf ./oceanM bsea.in >& romsout.txt
+```
+
+and the job can be submitted using **bsub < roms.lsf** command.
 
 ## Day3: Model Coupling with Regional Earth System Model (RegESM) modeling system
 
