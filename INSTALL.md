@@ -52,7 +52,7 @@ Then source the **env_progs** file to use installed libraries and tools using fo
 The [ICTP](http://www.ictp.it/research/esp.aspx)'s RegCM (**Reg**ional **C**Limate **M**odel) development is managed by SVN repository that can be found in [here](https://gforge.ictp.it/gf/project/regcm/scmsvn/?action=AccessInfo). To retrieve and install latest tagged version of the source code, please issue following commands,
 
 ```
-> cd /RS/users/$USER/workshop
+> cd /RS/projects/workshop/$USER
 > mkdir -p day1/src
 > cd day1/src
 > wget https://gforge.ictp.it/gf/download/frsrelease/252/1580/RegCM-4.5.0.tar.gz
@@ -193,6 +193,14 @@ The installation and usage of ROMS oceean modeling system include set of steps;
 The simplified version of the Black Sea model will be used during the summer school,
 
 ![Bathymetry map](https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/images/Fig_02_bathymetry.png)
+
+The configuration details of the Black Sea Model:
+
+* **Model Resolution:** ~5 km (171-103 grid noktası) / 32 sigma seviyesi (θs = 6.5, θb = 2.5 and critical depth is, Hc = 5 m)
+* **Bathymetry:** [GEBCO](http://www.gebco.net)
+* **Initial and Boundary Condition:** Black Sea ROMS Simulation that was performed previously in a TUBITAK project (113Y108)
+* **Atmospheric Forcing:** Long simulation of TR10 model (1979-2012) that was also performed previously in a TUBITAK project (113Y108)
+* **River Forcing:** It was calculated by using Max Planck's [HD](http://www.mpimet.mpg.de/en/science/the-land-in-the-earth-system/working-groups/terrestrial-hydrology/hd-model/) River Routing Model
 
 The following commands can be used to download ROMS modeling system (**the original version of the model does not support coupling through the RegESM driver! See section for day three for more information**) but first, you must register in [here](https://www.myroms.org/index.php?page=RomsCode) to get access to download the model using [SVN](https://subversion.apache.org) command.
 
@@ -432,6 +440,177 @@ mpirun.lsf ./oceanM bsea.in >& romsout.txt
 
 and the job can be submitted using **bsub < roms.lsf** command.
 
-## Day3: Model Coupling with Regional Earth System Model (RegESM) modeling system
+## Day3: Model Coupling with Regional Earth System Model (RegESM) modeling system - Atmosphere-Ocean Example
 
-The open source RegESM modeling system is developed by ITU. The source is maintained by GitHub to allow version controlling and issue traking. The source code can be reachable from [here](https://github.com/uturuncoglu/RegESM). 
+The open source RegESM modeling system is developed by ITU and the project is maintained by [GitHub](https://github.com/uturuncoglu/RegESM) to allow version controlling and issue traking.
+
+The basic steps to install coupled modeling system include:
+
+1. Installation of RegCM atmosphere model in coupling mode (simply install with --enable-cpl configure option)
+2. Installation of ROMS ocean model with coupling support. In this case, you need to apply patch (a file with addtional source code) to original version of ROMS ocean model to allow coupling. Then, install the model with coupling options (defined via CPP options).
+3. Installation of the RegESM modeling system using previous installation of RegCM and ROMS models (step 1-2).
+4. Preparing configuration files of individual model components (RegCM and ROMS) as well as configuration files of the coupiled model (namelist.rc and exfield.tbl)
+
+### Installation of RegCM with coupling support
+
+The RegCM model is already compatible with RegESM driver. In this case, the used can choose BATS (Biosphere Atmosphere Transfer Scheme) or CLM (Community Land Model) as land-surface model. To install RegCM with coupling support,
+
+```
+> cd /RS/projects/workshop/$USER
+> mkdir -p day3/src/atm
+> cd day3/src/atm
+> wget https://gforge.ictp.it/gf/download/frsrelease/252/1580/RegCM-4.5.0.tar.gz
+> tar -zxvf RegCM-4.5.0.tar.gz
+> cd RegCM-4.5.0
+> ./configure --prefix=`pwd` --enable-cpl CC=${CC} FC=${FC} MPIFC=mpiifort
+> make install
+```
+
+The source code that is already installed with coupling support can be accessed from **/RS/progs/workshop/hands-on/day3/src/atm/RegCM-4.5.0** directory. It can be used to install driver (RegESM).
+
+### Installation of ROMS with coupling support
+
+The origical version of ROMS ocean model does not support coupling with RegESM driver. So, user need to apply small patch that includes set of modifications in the model source code to activate coupling. It basically adds extra CPP configuration options such as **REGCM_COUPLING**, **HD_COUPLING** and **MODIFIED_CALDATE**.
+
+To retrive the ocean model and applying patch, following commands can be used,
+
+```
+> cd /RS/projects/workshop/$USER/day3
+> mkdir -p src/ocn
+> cd src/ocn
+
+if you already registered and have user name and password
+> svn checkout -r 809 --username [ROMS USER NAME] https://www.myroms.org/svn/src/trunk roms-r809
+
+if not, you could download the source code from GitHub
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/blob/master/day2/src/roms-r809.tar.gz
+> tar -zxvf roms-r809.tar.gz 
+> cd roms-r809
+> wget https://github.com/uturuncoglu/RegESM/raw/master/tools/ocn/roms-r809.patch
+> patch -p 3 < roms_r809.patch
+```
+
+To install user needs to have a configuration file (*.h) that constains the definition of options (as CPP flags) for the simulations. To install the model, it is necessary to include extra CPP options and modify the bsea.h used in second day of the school.
+
+The standalone ocean model simulation, the bulk flux formula is used to calculate surface fluxes from set of meteorological fields (surface air temperature, specific humidity, u and v component of wind speed, precipitation, air pressure, downwelling longwave radiation, shortwave radiaition) over the sea. 
+
+In the coupled model, there is no need to use bulk flux package and atmospheric model provides required fields (u and v component of wind stress, net heat flux, net freshwater flux - simply E-P, shortwave radiation - used by LMD vertical mixing scheme and atmospheric pressure). To that end, **bsea.h** file is slightly different from the file used in the standalone model simulation.
+
+```
+> cd /RS/projects/workshop/$USER/day3/src/ocn 
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day3/bsea.h
+> cp /RS/projects/workshop/$USER/day2/src/build.sh .
+
+Edit MY_ROOT_DIR to specify new installation path and roms-r809/Compilers/Linux-ifort.mk file for system specific definitions
+
+> ./build.sh
+```
+
+This will install ROMS ocean model with coupling support. Now, both atmosphere and ocean models are ready to use with RegESM driver.
+
+### Installation of RegESM driver
+
+To install driver, the following commands can be used,
+
+```
+> cd /RS/projects/workshop/$USER
+> mkdir -p day3/src/drv
+> cd day3/src/drv
+> git clone https://github.com/uturuncoglu/RegESM.git
+> cd RegESM
+> ./bootstrap.sh
+> ./configure --prefix=`pwd` --enable-atm=/RS/projects/workshop/$USER/day3/src/atm/RegCM-4.5.0 --enable-ocn=/RS/projects/workshop/$USER/day3/src/ocn/Build CC=${CC} FC=${FC} MPIFC=mpiifort
+> make
+> make install
+> cd ../../../
+> ln -s src/drv/RegESM/regesm.x .
+```
+
+The atmosphere and ocean model installation paths can be also replaced with **/RS/progs/workshop/hands-on/day3/src/atm/RegCM-4.5.0** and **/RS/progs/workshop/hands-on/day3/src/ocn/Build**. These paths includes installations that are done previously.
+
+### Running fully coupled atmosphere-ocean modeling system (RegESM)
+
+To run the model, user need to provide configuration files for atmosphere, ocean and driver (RegESM) and input files (initial and boundary conditions for the models, the atmospheric forcing for the ocean model will be provided by active atmosphere model).
+
+To define exchange fields between model components, a special configuration file is needed (**exfield.tbl**). The following exchange field table include information for driver and the listed fields will be transferred (includes also online interpolation) between model components. This file must be placed under **/RS/projects/workshop/$USER/day3**.
+
+```
+6 atm2ocn T
+taux:eastward_10m_wind_stress:bilinear:cross:u:N/m2:m2/s2:cf3:0.0:F
+tauy:northward_10m_wind_stress:bilinear:cross:v:N/m2:m2/s2:cf3:0.0:F
+psfc:surface_air_pressure:bilinear:cross:cross:mb:mb:1.0:0.0:F
+swrd:shortwave_radiation:bilinear:cross:cross:W/m^2:Cm/s:cf2:0.0:T
+sflx:water_flux_into_sea_water:bilinear:cross:cross:kg/m^2s:m/s:0.001:0.0:T
+nflx:surface_heat_flux:bilinear:cross:cross:W/m^2:Cm/s:cf2:0.0:T
+1 ocn2atm T
+sst:sea_surface_temperature:bilinear:cross:cross:C:K:1.0:273.16:F
+```
+
+The detailed information about the **exfield.tbl** can be found in the user guide of the RegESM model that can be found in [here](https://github.com/uturuncoglu/RegESM/blob/master/docs/user_guide.pdf).
+
+Then, we need to copy configuration files of RegCM and ROMS from the directories used in first and second day of the school.
+
+```
+> cd /RS/projects/workshop/$USER/day3
+> cp ../day1/regcm.in_TR10km .
+> cp ../day2/bsea.in bsea.in
+> cp ../day2/varinfo.dat varinfo.dat
+```
+
+and configuration files will be modified slightly for fully coupled model simulation. Please edit directory definitions in *dirter*, *dirglob*, *dirout* and change / add following configuration parameters in **regcm.in_TR10km**.
+
+```
+...
+ &physicsparam
+...
+ iocncpl =          1,
+...
+ idcsst = 0,
+ /
+...
+...
+ &cplparam
+ cpldt        = 10800.,
+ zomax        = 0.005,
+ ustarmax     = 1.2,
+ /   
+```
+
+The *cplparam* includes definitions related with model coupling. Also not that the **cpldt** parameter is the coupling time step (set as 3 hours) and must be consistent with the time step defined in driver configuration file.
+
+Now, the driver configuration file (**namelist.rc**) can be created.
+
+```
+> cd cd /RS/projects/workshop/$USER/day3
+> cp src/drv/RegESM/namelist.rc .
+```
+
+In this case, **namelist.rc** file must be modified. The detailed information about the options can be found in the user guide of the RegESM model that can be found in [here](https://github.com/uturuncoglu/RegESM/blob/master/docs/user_guide.pdf).
+
+To create dummy ocean forcing file (full of zeros) and directories,
+
+```
+> mkdir input output
+> cd input
+> ln -s ../../day1/input/* .
+> ln -s ../../day2/input/* .
+> cd input
+> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day3/roms_forc_nobulk_dummy.ncl
+> ncl roms_forc_nobulk_dummy.ncl
+```
+
+To run the model, following LSF script can be used,
+
+```
+#!/bin/bash
+#BSUB -P workshop
+#BSUB -J regesm 
+#BSUB -q workshop
+#BSUB -m anadolu_dual 
+#BSUB -o %J.out
+#BSUB -e %J.err
+#BSUB -a intelmpi4
+#BSUB -n 32
+
+mpirun.lsf ./regesm.x regcm.in_TR10km bsea.in >& regesmout.txt
+```
