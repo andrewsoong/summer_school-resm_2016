@@ -33,6 +33,8 @@ make install >> make.log
 cd -
 mv extract.log ${PROGS}/zlib-${ZLIB_VER}/.
 
+export ZLIB=${PROGS}/zlib-${ZLIB_VER}
+
 # install hdf5
 cd ${PROGS}
 wget "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VER}/src/hdf5-${HDF5_VER}.tar.gz" 
@@ -44,6 +46,8 @@ make > make.log
 make install >> make.log
 cd -
 mv extract.log ${PROGS}/hdf5-${HDF5_VER}/.
+
+export HDF5=${PROGS}/hdf5-${HDF5_VER}
 
 # install netcdf c
 cd ${PROGS}
@@ -150,6 +154,7 @@ export ESMF_NETCDF_LIBPATH=${NETCDF}/lib
 export ESMF_XERCES=standard
 export ESMF_XERCES_INCLUDE=${XERCES}/include
 export ESMF_XERCES_LIBPATH=${XERCES}/lib
+export ESMF_LIB=${ESMF_INSTALL_PREFIX}/lib/lib${ESMF_BOPT}/${ESMF_OS}.${ESMF_COMPILER}.${ESMF_ABI}.${ESMF_COMM}.${ESMF_SITE}
 make info >> make.log
 make >> make.log
 make install >> make.log
