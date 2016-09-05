@@ -3,6 +3,12 @@ set -ex
 
 PROGS=$1
 
+# check for directory argument
+if [ -z $PROGS ]; then
+  echo "[error] -- you must provide a directory name for installation! exiting ..."
+  exit
+fi
+
 # compilers
 CC=icc
 FC=ifort
