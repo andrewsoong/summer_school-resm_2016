@@ -34,7 +34,7 @@ It is also possible to add these commands to **~/.bashrc** (for bash shell users
 The **install.sh** script can be used for the installation of required tools (i.e. [zlib](http://www.zlib.net), [HDF5](https://www.hdfgroup.org/HDF5/), [netCDF C/C++ and Fortran](http://www.unidata.ucar.edu/software/netcdf/), [xerces-c](http://xerces.apache.org/#xerces-c) and [ESMF](https://www.earthsystemcog.org/projects/esmf/) libraries). The script can be executed using following command (the command line argument given after shell script is the installation directory i.e. **/opt/progs**).
 
 ```
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/install.sh
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/install.sh
 > ./install.sh `pwd`
 
 or in case of explicitly defined installation directory 
@@ -96,7 +96,7 @@ To get RegCM configuration file for MED50 simulation,
 
 ```
 > cd /RS/users/$USER/workshop/day1
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/regcm.in_MED50km
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/regcm.in_MED50km
 ```
 
 Then, edit **regcm.in_MED50km** file and modify **dirter**, **dirglob**, **dirout** paths according to your user directories and run following commands to create input files for RegCM simulation, 
@@ -155,13 +155,13 @@ After running parent domain (MED50) simulation and having output files, the init
 > cd /RS/users/$USER/workshop/day1
 > mkdir data
 > cd data
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/link.sh
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/link.sh
 
 edit idir parameter and change the output directory before running following commands! 
 
 > ./link.sh
 > ln -s /RS/progs/workshop/data/RCMDATA/SST .
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/regcm.in_TR10km
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day1/regcm.in_TR10km
 ```
 
 Then, edit **regcm.in_TR10km** file and modify **dirter**, **dirglob**, **dirout** paths according to your user directories and run following commands to create input files for RegCM simulation,
