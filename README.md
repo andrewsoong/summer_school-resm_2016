@@ -69,6 +69,7 @@ The installation of the model might take time depending on the used system and t
 ```
 > cd /RS/users/$USER/workshop
 > mkdir day1
+> cd day1
 > ln -s /RS/progs/workshop/hands-on/day1/src/RegCM-4.5.0/bin .
 ```
 
