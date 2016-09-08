@@ -55,7 +55,7 @@ The [ICTP](http://www.ictp.it/research/esp.aspx)'s RegCM (**Reg**ional **C**Lima
 > cd /RS/projects/workshop/$USER
 > mkdir -p day1/src
 > cd day1/src
-> wget https://gforge.ictp.it/gf/download/frsrelease/252/1580/RegCM-4.5.0.tar.gz
+> wget --no-check-certificate https://gforge.ictp.it/gf/download/frsrelease/252/1580/RegCM-4.5.0.tar.gz
 > tar -zxvf RegCM-4.5.0.tar.gz
 > cd RegCM-4.5.0
 > ./configure --prefix=`pwd` CC=${CC} FC=${FC} MPIFC=mpiifort
@@ -215,7 +215,7 @@ if you already registered and have user name and password
 > svn checkout -r 809 --username [ROMS USER NAME] https://www.myroms.org/svn/src/trunk roms-r809
 
 if not, you could download the source code from GitHub
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/blob/master/day2/src/roms-r809.tar.gz
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/blob/master/day2/src/roms-r809.tar.gz
 > tar -zxvf roms-r809.tar.gz 
 ```
 
@@ -346,7 +346,7 @@ setenv which_MPI             intelmpi
 Then, the installation script (**build.sh**) can be run along with the model configuration file (**bsea.h**),  
 
 ```
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/bsea.h
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/bsea.h
 > ./build.sh
 ```
 
@@ -358,7 +358,7 @@ In general, the ROMS ocean model requires a set of input files such as grid defi
 > cd /RS/users/$USER/workshop/day2
 > mkdir input
 > cd input
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/input.tar.gz
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/input.tar.gz
 > tar -zxvf input.tar.gz
 
 To create atmospheric forcing, you must edit roms_forc_bulk_ex.ncl and point out surface output of one month RegCM simulation. Then, you can run NCL script to create forcing file.
@@ -376,7 +376,7 @@ To run the model, use following steps and
 > cd /RS/users/$USER/workshop/day2
 > ln -s src/oceanM .
 > mkdir output
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/bsea.in
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day2/bsea.in
 > cp src/roms-r809/ROMS/External/varinfo.dat .
 ```
 
@@ -460,7 +460,7 @@ The RegCM model is already compatible with RegESM driver. In this case, the used
 > cd /RS/projects/workshop/$USER
 > mkdir -p day3/src/atm
 > cd day3/src/atm
-> wget https://gforge.ictp.it/gf/download/frsrelease/252/1580/RegCM-4.5.0.tar.gz
+> wget --no-check-certificate https://gforge.ictp.it/gf/download/frsrelease/252/1580/RegCM-4.5.0.tar.gz
 > tar -zxvf RegCM-4.5.0.tar.gz
 > cd RegCM-4.5.0
 > ./configure --prefix=`pwd` --enable-cpl CC=${CC} FC=${FC} MPIFC=mpiifort
@@ -484,10 +484,10 @@ if you already registered and have user name and password
 > svn checkout -r 809 --username [ROMS USER NAME] https://www.myroms.org/svn/src/trunk roms-r809
 
 if not, you could download the source code from GitHub
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/blob/master/day2/src/roms-r809.tar.gz
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/blob/master/day2/src/roms-r809.tar.gz
 > tar -zxvf roms-r809.tar.gz 
 > cd roms-r809
-> wget https://github.com/uturuncoglu/RegESM/raw/master/tools/ocn/roms-r809.patch
+> wget --no-check-certificate https://github.com/uturuncoglu/RegESM/raw/master/tools/ocn/roms-r809.patch
 > patch -p 3 < roms_r809.patch
 ```
 
@@ -499,7 +499,7 @@ In the coupled model, there is no need to use bulk flux package and atmospheric 
 
 ```
 > cd /RS/projects/workshop/$USER/day3/src/ocn 
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day3/bsea.h
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day3/bsea.h
 > cp /RS/projects/workshop/$USER/day2/src/build.sh .
 
 Edit MY_ROOT_DIR to specify new installation path and roms-r809/Compilers/Linux-ifort.mk file for system specific definitions
@@ -596,7 +596,7 @@ To create dummy ocean forcing file (full of zeros) and directories,
 > ln -s ../../day1/input/* .
 > ln -s ../../day2/input/* .
 > cd input
-> wget https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day3/roms_forc_nobulk_dummy.ncl
+> wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/raw/master/day3/roms_forc_nobulk_dummy.ncl
 > ncl roms_forc_nobulk_dummy.ncl
 ```
 

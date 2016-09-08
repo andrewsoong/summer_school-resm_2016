@@ -29,7 +29,7 @@
  fudge_lak_s  = .false.,
  h2opct = 75.,
  h2ohgt = .false.,
- dirter = '/RS/users/du001/workshop/day1/input',
+ dirter = '/RS/projects/workshop/du001/day1_2/input',
  inpter = '/RS/progs/workshop/data/RCMDATA',
  /
  &ioparam
@@ -53,7 +53,7 @@
  calendar = 'gregorian',
  gdate1 = 2010010100,
  gdate2 = 2010020101,
- dirglob = '/RS/users/du001/workshop/day1/input',
+ dirglob = '/RS/projects/workshop/du001/day1_2/input',
  inpglob = '/RS/progs/workshop/data/RCMDATA',
  /
  &globwindow
@@ -94,7 +94,7 @@
    srffrq  =     3.,
  ifchem  = .true.,
    chemfrq =     6.,
- dirout = '/RS/users/du001/workshop/day1/output',
+ dirout = '/RS/projects/workshop/du001/day1_2/output',
  /
  &physicsparam
  iboudy  =          5,
@@ -105,7 +105,7 @@
  ipptls  =          1,
  iocnflx =          2,
  iocnrough =        2,
- iocncpl =          1,
+ iocncpl =          0,
  ipgf    =          0,
  iemiss  =          0,
  lakemod =          0,

@@ -6,6 +6,7 @@
 #BSUB -o %J.out
 #BSUB -e %J.err
 #BSUB -a intelmpi4
-#BSUB -n 16 
+#BSUB -n 8 
 
-mpirun.lsf bin/regcmMPI regcm.in_MED50km >& regcmout.txt
+#mpirun.lsf bin/regcmMPI regcm.in_MED50km >& regcmout.txt 
+mpirun.lsf bin/regcmMPI regcm.in_TR10km >& regcmout.txt 
