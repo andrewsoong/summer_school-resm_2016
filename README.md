@@ -213,6 +213,8 @@ The following commands can be used to download ROMS modeling system (**the origi
 
 if you already registered and have user name and password
 > svn checkout -r 809 --username [ROMS USER NAME] https://www.myroms.org/svn/src/trunk roms-r809
+> wget --no-check-certificate https://github.com/uturuncoglu/RegESM/raw/master/tools/ocn/roms-r809.patch
+> patch -p 2 < roms-r809.patch
 
 if not, you could download the source code from GitHub
 > wget --no-check-certificate https://github.com/uturuncoglu/summer_school-resm_2016/blob/master/day2/src/roms-r809.tar.gz
